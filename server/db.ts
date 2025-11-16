@@ -84,8 +84,8 @@ export async function getUserTasksList(userId: number) {
 export async function createTask(task: InsertTask) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const result = await db.insert(tasks).values(task);
-  return result;
+  const result = await db.insert(tasks).values(task).returning(); // Добавить .returning()
+  return result[0]; // Вернуть первую (и единственную) запись
 }
 
 export async function updateTask(taskId: number, updates: Partial<InsertTask>) {

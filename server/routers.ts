@@ -70,7 +70,7 @@ export const appRouter = router({
           { offset: 2 * 60 * 60 * 1000, type: "2hours" as const },
           { offset: 1 * 60 * 60 * 1000, type: "1hour" as const },
         ].map((reminder) => ({
-          taskId: (task as any).insertId,
+          taskId: task.id, // Использовать task.id вместо task.insertId
           userId: ctx.user.id,
           reminderType: reminder.type,
           scheduledFor: new Date(input.scheduledAt.getTime() - reminder.offset),
