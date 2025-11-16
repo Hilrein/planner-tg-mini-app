@@ -10,7 +10,10 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      const client = createClient({ url: process.env.DATABASE_URL });
+      const client = createClient({ 
+        url: process.env.DATABASE_URL,
+        authToken: process.env.TURSO_AUTH_TOKEN // Добавить эту строку
+      });
       _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
