@@ -6,7 +6,6 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { serveStatic, setupVite } from "./vite";
 import { initializeJobs } from "./initJobs";
 
 // Create Express app - can be used both for local server and Vercel
@@ -55,8 +54,12 @@ async function startServer() {
   
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
+    // Dynamic import to avoid bundling vite in production
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
+    // Import static server (no vite dependencies)
+    const { serveStatic } = await import("./static");
     serveStatic(app);
   }
 
