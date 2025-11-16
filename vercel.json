@@ -1,7 +1,17 @@
 {
   "version": 2,
   "buildCommand": "pnpm vercel-build",
-  "outputDirectory": "dist",
+  "outputDirectory": "dist/public",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "framework": null
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/server"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/server"
+    }
+  ]
 }

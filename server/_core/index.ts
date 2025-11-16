@@ -9,6 +9,27 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { initializeJobs } from "./initJobs";
 
+// Create Express app - can be used both for local server and Vercel
+export function createApp() {
+  const app = express();
+  
+  // Configure body parser with larger size limit for file uploads
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  
+  // Telegram authentication routes are handled via tRPC
+  // tRPC API
+  app.use(
+    "/api/trpc",
+    createExpressMiddleware({
+      router: appRouter,
+      createContext,
+    })
+  );
+  
+  return app;
+}
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
@@ -29,20 +50,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
-  const app = express();
+  const app = createApp();
   const server = createServer(app);
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // Telegram authentication routes are handled via tRPC
-  // tRPC API
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
+  
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
@@ -64,4 +74,7 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error);
+// Only start server if not in Vercel environment
+if (process.env.VERCEL !== "1") {
+  startServer().catch(console.error);
+}
