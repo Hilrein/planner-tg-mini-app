@@ -53,7 +53,8 @@ async function startServer() {
   const server = createServer(app);
   
   // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
+  // In Vercel, always use static files (never load vite)
+  if (process.env.NODE_ENV === "development" && process.env.VERCEL !== "1") {
     // Dynamic import to avoid bundling vite in production
     const { setupVite } = await import("./vite");
     await setupVite(app, server);
