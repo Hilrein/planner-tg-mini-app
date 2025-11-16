@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
 import { InsertUser, users, Task, InsertTask, Reminder, InsertReminder, reminders, tasks, telegramUsers, terms, userAcceptances } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -9,7 +10,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = createClient({ url: process.env.DATABASE_URL });
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -42,7 +44,10 @@ export async function createOrUpdateUser(telegramUsername: string) {
     
     if (existing) {
       // Update lastSignedIn
-      await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.telegramUsername, telegramUsername));
+      await db.update(users).set({ 
+        lastSignedIn: new Date(),
+        updatedAt: new Date()
+      }).where(eq(users.telegramUsername, telegramUsername));
       return existing;
     }
 
@@ -83,7 +88,7 @@ export async function createTask(task: InsertTask) {
 export async function updateTask(taskId: number, updates: Partial<InsertTask>) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  return db.update(tasks).set(updates).where(eq(tasks.id, taskId));
+  return db.update(tasks).set({ ...updates, updatedAt: new Date() }).where(eq(tasks.id, taskId));
 }
 
 export async function deleteTask(taskId: number) {
@@ -130,7 +135,11 @@ export async function createOrUpdateTelegramUser(userId: number, telegramChatId:
   if (!db) throw new Error("Database not available");
   const existing = await getTelegramUser(userId);
   if (existing) {
-    return db.update(telegramUsers).set({ telegramChatId, telegramUserId }).where(eq(telegramUsers.userId, userId));
+    return db.update(telegramUsers).set({ 
+      telegramChatId, 
+      telegramUserId,
+      updatedAt: new Date()
+    }).where(eq(telegramUsers.userId, userId));
   }
   return db.insert(telegramUsers).values({ userId, telegramChatId, telegramUserId });
 }

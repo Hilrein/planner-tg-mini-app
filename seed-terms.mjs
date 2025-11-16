@@ -1,6 +1,6 @@
-import mysql from 'mysql2/promise';
+import { createClient } from "@libsql/client";
 
-const connection = await mysql.createConnection(process.env.DATABASE_URL);
+const client = createClient({ url: process.env.DATABASE_URL });
 
 const terms = [
   {
@@ -21,11 +21,11 @@ const terms = [
 ];
 
 for (const term of terms) {
-  await connection.execute(
-    'INSERT INTO terms (title, content, `order`, active) VALUES (?, ?, ?, 1)',
-    [term.title, term.content, term.order]
-  );
+  await client.execute({
+    sql: 'INSERT INTO terms (title, content, "order", active) VALUES (?, ?, ?, 1)',
+    args: [term.title, term.content, term.order]
+  });
 }
 
 console.log('Terms seeded successfully!');
-await connection.end();
+await client.close();
